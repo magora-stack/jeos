@@ -30,7 +30,7 @@ public class EosApiServiceGenerator {
         mapper.setPropertyNamingStrategy(new SnakeCaseStrategy());
         mapper.findAndRegisterModules();
         //
-        httpClient = new OkHttpClient.Builder().addInterceptor(new LoggingInterceptor()).build();
+        httpClient = new OkHttpClient.Builder().build();
 
     }
 
