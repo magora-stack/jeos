@@ -17,7 +17,7 @@ import io.jafka.jeos.util.ecc.Secp256k;
  * @since 2018年9月5日
  */
 public class KeyUtil {
-    public static final String address_prefix = "EOS";
+    public static final String ADDRESS_PREFIX = "EOS";
 
     public static final Secp256k secp = new Secp256k();
     public static String createPrivateKey() {
@@ -58,7 +58,7 @@ public class KeyUtil {
         byte[] csum = Ripemd160.from(pub_buf).bytes();
         csum = Raw.copy(csum, 0, 4);
         byte[] addy = Raw.concat(pub_buf, csum);
-        StringBuffer bf = new StringBuffer(address_prefix);
+        StringBuffer bf = new StringBuffer(ADDRESS_PREFIX);
         bf.append(Base58.encode(addy));
         return bf.toString();
     }

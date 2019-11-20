@@ -74,7 +74,7 @@ public class Raw {
         return this;
     }
     public Raw packPublicKey(String key) {
-        if(key.startsWith("EOS")) {
+        if(key.startsWith(KeyUtil.ADDRESS_PREFIX)) {
             key = key.substring(3);
         }
         byte[] b = Base58.decode(key);

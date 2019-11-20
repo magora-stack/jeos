@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.jafka.jeos.exception.EosApiError;
 import io.jafka.jeos.exception.EosApiErrorCode;
 import io.jafka.jeos.exception.EosApiException;
+import io.jafka.jeos.exception.EosErrorDetails;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -58,6 +59,10 @@ public class EosApiServiceGenerator {
                 return response.body();
             } else {
                 EosApiError apiError = getEosApiError(response);
+                System.err.println("error_code:"+apiError.getEosErrorCode());
+                for (EosErrorDetails detail:apiError.getError().getDetails()) {
+                    System.err.println("error_detail:"+detail.toString());
+                }
                 throw new EosApiException(apiError.getDetailedMessage(), EosApiErrorCode.get(apiError.getEosErrorCode()));
             }
         } catch (IOException e) {

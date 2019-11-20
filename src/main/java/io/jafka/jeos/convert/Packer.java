@@ -1,21 +1,15 @@
 package io.jafka.jeos.convert;
 
-import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Collections;
-
 import io.jafka.jeos.core.common.transaction.PackedTransaction;
 import io.jafka.jeos.core.request.chain.json2bin.BuyRamArg;
 import io.jafka.jeos.core.request.chain.json2bin.CreateAccountArg;
 import io.jafka.jeos.core.request.chain.json2bin.DelegatebwArg;
 import io.jafka.jeos.core.request.chain.json2bin.TransferArg;
-import io.jafka.jeos.core.response.chain.account.Key;
-import io.jafka.jeos.core.response.chain.account.PermissionLevel;
-import io.jafka.jeos.core.response.chain.account.PermissionLevelWeight;
-import io.jafka.jeos.core.response.chain.account.RequiredAuth;
-import io.jafka.jeos.util.ByteArrayBuffer;
 import io.jafka.jeos.util.Raw;
 import io.jafka.jeos.util.ecc.Hex;
+
+import java.time.ZoneOffset;
+import java.util.Arrays;
 
 /**
  * 

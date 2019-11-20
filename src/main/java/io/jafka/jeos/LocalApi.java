@@ -17,11 +17,13 @@ public interface LocalApi {
 
     String toPublicKey(String privateKey);
 
-    default PushTransactionRequest transfer(SignArg arg, String privateKey, String from, String to, String quantity, String memo) {
-        return transfer(arg, privateKey, "eosio.token", from, to, quantity, memo);
-    }
-
     PushTransactionRequest transfer(SignArg arg, String privateKey, String account, String from, String to, String quantity, String memo);
+
+    PushTransactionRequest buyRam(SignArg arg, String privateKey,String contractAccount, String payer, String receiver, int ramBytes);
+
+    PushTransactionRequest delegate(SignArg arg, String privateKey, String contractAccount, String from, String receiver, String stakeNetQuantity, String stakeCpuQuantity);
+
+    PushTransactionRequest createAccount(SignArg arg, String privateKey, String contractAccount, String creator, String name, String owner, String active, int ramBytes, String stakeNetQuantity, String stakeCpuQuantity);
 
     default ObjectMapper getObjectMapper() {
         return EosApiServiceGenerator.getMapper();
