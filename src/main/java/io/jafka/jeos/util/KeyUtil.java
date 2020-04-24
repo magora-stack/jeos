@@ -17,7 +17,7 @@ import io.jafka.jeos.util.ecc.Secp256k;
  * @since 2018年9月5日
  */
 public class KeyUtil {
-    public static final String ADDRESS_PREFIX = "EOS";
+    public static String ADDRESS_PREFIX = "EOS";
 
     public static final Secp256k secp = new Secp256k();
     public static String createPrivateKey() {

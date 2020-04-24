@@ -7,10 +7,7 @@ import io.jafka.jeos.core.common.SignArg;
 import io.jafka.jeos.core.common.transaction.PackedTransaction;
 import io.jafka.jeos.core.common.transaction.TransactionAction;
 import io.jafka.jeos.core.common.transaction.TransactionAuthorization;
-import io.jafka.jeos.core.request.chain.json2bin.BuyRamArg;
-import io.jafka.jeos.core.request.chain.json2bin.CreateAccountArg;
-import io.jafka.jeos.core.request.chain.json2bin.DelegatebwArg;
-import io.jafka.jeos.core.request.chain.json2bin.TransferArg;
+import io.jafka.jeos.core.request.chain.json2bin.*;
 import io.jafka.jeos.core.request.chain.transaction.PushTransactionRequest;
 import io.jafka.jeos.core.response.chain.account.*;
 import io.jafka.jeos.util.KeyUtil;
@@ -71,7 +68,7 @@ public class LocalApiImpl implements LocalApi {
 
 
     @Override
-    public PushTransactionRequest buyRam(SignArg arg, String privateKey, String contractAccount, String payer, String receiver, int ramBytes) {
+    public PushTransactionRequest buyRam(SignArg arg, String privateKey, String payer, String receiver, int ramBytes) {
         // ① pack transfer data
         BuyRamArg buyRamArg = new BuyRamArg(payer, receiver, ramBytes);
         String buyRamData = Packer.packBuyrambytes(buyRamArg);
@@ -79,7 +76,7 @@ public class LocalApiImpl implements LocalApi {
         List<TransactionAuthorization> authorizations = Arrays.asList(new TransactionAuthorization(payer, "active"));
         // ④ build the all actions
         List<TransactionAction> actions = Arrays.asList(
-                new TransactionAction(contractAccount, "buyrambytes", authorizations, buyRamData)
+                new TransactionAction("eosio", "buyrambytes", authorizations, buyRamData)
         );
         // ⑤ build the packed transaction
         PackedTransaction packedTransaction = new PackedTransaction();
@@ -101,7 +98,7 @@ public class LocalApiImpl implements LocalApi {
 
 
     @Override
-    public PushTransactionRequest delegate(SignArg arg, String privateKey, String contractAccount, String from, String receiver, String stakeNetQuantity, String stakeCpuQuantity) {
+    public PushTransactionRequest delegate(SignArg arg, String privateKey, String from, String receiver, String stakeNetQuantity, String stakeCpuQuantity) {
         // ① pack transfer data
         Long transfer = 1L;
         if (from.equals(receiver)) {
@@ -113,7 +110,7 @@ public class LocalApiImpl implements LocalApi {
         List<TransactionAuthorization> authorizations = Arrays.asList(new TransactionAuthorization(from, "active"));
         // ④ build the all actions
         List<TransactionAction> actions = Arrays.asList(
-                new TransactionAction(contractAccount, "delegatebw", authorizations, delegateData)
+                new TransactionAction("eosio", "delegatebw", authorizations, delegateData)
         );
         // ⑤ build the packed transaction
         PackedTransaction packedTransaction = new PackedTransaction();
@@ -134,7 +131,7 @@ public class LocalApiImpl implements LocalApi {
     }
 
     @Override
-    public PushTransactionRequest createAccount(SignArg arg, String privateKey, String contractAccount, String creator, String name, String owner, String active, int ramBytes, String stakeNetQuantity, String stakeCpuQuantity) {
+    public PushTransactionRequest createAccount(SignArg arg, String privateKey, String creator, String name, String owner, String active, int ramBytes, String stakeNetQuantity, String stakeCpuQuantity) {
         // ① pack transfer data
         RequiredAuth ownerAuth = new RequiredAuth(1L, Arrays.asList(new Key(owner, 1)), Collections.EMPTY_LIST, Collections.EMPTY_LIST);
         RequiredAuth activeAuth = new RequiredAuth(1L, Arrays.asList(new Key(active, 1)), Collections.EMPTY_LIST, Collections.EMPTY_LIST);
@@ -146,9 +143,9 @@ public class LocalApiImpl implements LocalApi {
         String buyRamData = Packer.packBuyrambytes(new BuyRamArg(creator, name, ramBytes));
         String delegateData = Packer.packDelegatebw(new DelegatebwArg(creator, name, stakeNetQuantity, stakeCpuQuantity, 1L));
         List<TransactionAction> actions = Arrays.asList(
-                new TransactionAction(contractAccount, "newaccount", authorizations, createData),
-                new TransactionAction(contractAccount, "buyrambytes", authorizations, buyRamData),
-                new TransactionAction(contractAccount, "delegatebw", authorizations, delegateData)
+                new TransactionAction("eosio", "newaccount", authorizations, createData),
+                new TransactionAction("eosio", "buyrambytes", authorizations, buyRamData),
+                new TransactionAction("eosio", "delegatebw", authorizations, delegateData)
         );
 
         // ⑤ build the packed transaction
@@ -169,8 +166,77 @@ public class LocalApiImpl implements LocalApi {
         return req;
     }
 
+    @Override
+    public PushTransactionRequest updateAuth(SignArg arg, String privateKey, String account, String publicKey, String permission) {
+        // ① pack transfer data
+        RequiredAuth auth = new RequiredAuth(1L, Arrays.asList(new Key(publicKey, 1)), Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        UpdateAuthArg updateAuthArg = new UpdateAuthArg(account, auth, "owner", permission);
+        String updateAutheData = Packer.packUpdateAuth(updateAuthArg);
+        // ③ create the authorization
+        List<TransactionAuthorization> authorizations = Arrays.asList(new TransactionAuthorization(account, "owner"));
+        // ④ build the all actions
+        List<TransactionAction> actions = Arrays.asList(
+                new TransactionAction("eosio", "updateauth", authorizations, updateAutheData)
+        );
+        // ⑤ build the packed transaction
+        PackedTransaction packedTransaction = new PackedTransaction();
+        packedTransaction.setExpiration(arg.getHeadBlockTime().plusSeconds(arg.getExpiredSecond()));
+        packedTransaction.setRefBlockNum(arg.getLastIrreversibleBlockNum());
+        packedTransaction.setRefBlockPrefix(arg.getRefBlockPrefix());
+
+        packedTransaction.setMaxNetUsageWords(0);
+        packedTransaction.setMaxCpuUsageMs(0);
+        packedTransaction.setDelaySec(0);
+        packedTransaction.setActions(actions);
+
+        String hash = sign(privateKey, arg, packedTransaction);
+        PushTransactionRequest req = new PushTransactionRequest();
+        req.setTransaction(packedTransaction);
+        req.setSignatures(Arrays.asList(hash));
+        return req;
+    }
+
+    @Override
+    public PushTransactionRequest updateMultipleAuth(SignArg arg, String privateKey, String account, Long threshold, List<Key> keys, String permission) {
+        // ① pack transfer data
+        RequiredAuth auth = new RequiredAuth(threshold, keys, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        UpdateAuthArg updateAuthArg = new UpdateAuthArg(account, auth, "owner", permission);
+        String updateAutheData = Packer.packUpdateAuth(updateAuthArg);
+        // ③ create the authorization
+        List<TransactionAuthorization> authorizations = Arrays.asList(new TransactionAuthorization(account, "owner"));
+        // ④ build the all actions
+        List<TransactionAction> actions = Arrays.asList(
+                new TransactionAction("eosio", "updateauth", authorizations, updateAutheData)
+        );
+
+        // ⑤ build the packed transaction
+        PackedTransaction packedTransaction = new PackedTransaction();
+        packedTransaction.setExpiration(arg.getHeadBlockTime().plusSeconds(arg.getExpiredSecond()));
+        packedTransaction.setRefBlockNum(arg.getLastIrreversibleBlockNum());
+        packedTransaction.setRefBlockPrefix(arg.getRefBlockPrefix());
+
+        packedTransaction.setMaxNetUsageWords(0);
+        packedTransaction.setMaxCpuUsageMs(0);
+        packedTransaction.setDelaySec(0);
+        packedTransaction.setActions(actions);
+
+        String hash = signMultiSig(privateKey, arg, packedTransaction);
+        PushTransactionRequest req = new PushTransactionRequest();
+        req.setTransaction(packedTransaction);
+        req.setSignatures(Arrays.asList(hash));
+        return req;
+    }
+
 
     private String sign(String privateKey, SignArg arg, PackedTransaction t) {
+
+        Raw raw = Packer.packPackedTransaction(arg.getChainId(), t);
+        raw.pack(ByteBuffer.allocate(33).array());// TODO: what's this?
+        String hash = KeyUtil.signHash(privateKey, raw.bytes());
+        return hash;
+    }
+
+    private String signMultiSig(String privateKey, SignArg arg, PackedTransaction t) {
 
         Raw raw = Packer.packPackedTransaction(arg.getChainId(), t);
         raw.pack(ByteBuffer.allocate(33).array());// TODO: what's this?

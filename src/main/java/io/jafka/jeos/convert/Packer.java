@@ -1,10 +1,8 @@
 package io.jafka.jeos.convert;
 
 import io.jafka.jeos.core.common.transaction.PackedTransaction;
-import io.jafka.jeos.core.request.chain.json2bin.BuyRamArg;
-import io.jafka.jeos.core.request.chain.json2bin.CreateAccountArg;
-import io.jafka.jeos.core.request.chain.json2bin.DelegatebwArg;
-import io.jafka.jeos.core.request.chain.json2bin.TransferArg;
+import io.jafka.jeos.core.request.chain.json2bin.*;
+import io.jafka.jeos.core.response.chain.account.RequiredAuth;
 import io.jafka.jeos.util.Raw;
 import io.jafka.jeos.util.ecc.Hex;
 
@@ -12,7 +10,6 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 
 /**
- * 
  * @author adyliu (imxylz@gmail.com)
  * @since 2018年9月6日
  */
@@ -26,6 +23,7 @@ public class Packer {
         raw.pack(arg.getMemo());
         return raw.toHex();
     }
+
     public static String packBuyrambytes(BuyRamArg arg) {
         Raw raw = new Raw();
         raw.packName(arg.getPayer());
@@ -33,6 +31,7 @@ public class Packer {
         raw.pack(arg.getBytes());
         return raw.toHex();
     }
+
     public static String packDelegatebw(DelegatebwArg arg) {
         Raw raw = new Raw();
         raw.packName(arg.getFrom());
@@ -42,7 +41,41 @@ public class Packer {
         raw.packVarint32(arg.getTransfer());
         return raw.toHex();
     }
-    
+
+    public static String packUpdateAuth(UpdateAuthArg arg) {
+        Raw raw = new Raw();
+        raw.packName(arg.getAccount());
+        raw.packName(arg.getPermission());
+        raw.packName(arg.getParent());
+
+        RequiredAuth auth = arg.getAuth();
+
+        // owner
+        raw.packUint32(auth.getThreshold());
+        // ownwer.keys
+        raw.packVarint32(auth.getKeys().size());
+        auth.getKeys().forEach(k -> {
+            raw.packPublicKey(k.getKey());
+            raw.packUint16(k.getWeight());
+        });
+        // ownwer.waits
+        raw.packVarint32(auth.getWaits().size());
+        auth.getWaits().forEach(w -> {
+            raw.packUint32(w.getWeightSec());
+            raw.packUint16(w.getWeight());
+        });
+
+        // ownwer.accounts
+        raw.packVarint32(auth.getAccounts().size());
+        auth.getAccounts().forEach(a -> {
+            raw.packName(a.getPermission().getActor());
+            raw.packName(a.getPermission().getPermission());
+            raw.packUint16(a.getWeight());
+        });
+
+        return raw.toHex();
+    }
+
     public static String packCreateAccount(CreateAccountArg arg) {
         Raw raw = new Raw();
         raw.packName(arg.getCreator());
@@ -73,6 +106,7 @@ public class Packer {
         });
         return raw.toHex();
     }
+
     public static Raw packPackedTransaction(String chainId, PackedTransaction t) {
         Raw raw = new Raw();
         //chain
@@ -92,18 +126,18 @@ public class Packer {
         //context_free_actions
         raw.packVarint32(t.getContextFreeActions().size());
         //TODO: getContextFreeActions
-        
+
         //actions
         raw.packVarint32(t.getActions().size());
         t.getActions().forEach(a -> {
             //action.account
-            raw.packName(a.getAccount())//
-                    .packName(a.getName())//
-                    .packVarint32(a.getAuthorization().size())//
-            ;
+            raw.packName(a.getAccount())
+                    .packName(a.getName())
+                    .packVarint32(a.getAuthorization().size());
+
             //action.authorization
             a.getAuthorization().forEach(au -> {
-                raw.packName(au.getActor())//
+                raw.packName(au.getActor())
                         .packName(au.getPermission());
             });
             //action.data
@@ -114,10 +148,10 @@ public class Packer {
         //transaction_extensions
         //raw.packVarint32(t.getTransactionExtensions().size());
         //TODO: getTransactionExtensions
-        
+
         //context_free_data
         //raw.packVarint32(t.getContextFreeActions().size());
         return raw;
     }
-    
+
 }
