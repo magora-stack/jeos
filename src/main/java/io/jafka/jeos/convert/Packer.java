@@ -1,13 +1,19 @@
 package io.jafka.jeos.convert;
 
+import io.jafka.jeos.core.common.Authorization;
 import io.jafka.jeos.core.common.transaction.PackedTransaction;
 import io.jafka.jeos.core.request.chain.json2bin.*;
+import io.jafka.jeos.core.response.chain.account.PermissionLevel;
 import io.jafka.jeos.core.response.chain.account.RequiredAuth;
 import io.jafka.jeos.util.Raw;
 import io.jafka.jeos.util.ecc.Hex;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author adyliu (imxylz@gmail.com)
@@ -58,12 +64,6 @@ public class Packer {
             raw.packPublicKey(k.getKey());
             raw.packUint16(k.getWeight());
         });
-        // ownwer.waits
-        raw.packVarint32(auth.getWaits().size());
-        auth.getWaits().forEach(w -> {
-            raw.packUint32(w.getWeightSec());
-            raw.packUint16(w.getWeight());
-        });
 
         // ownwer.accounts
         raw.packVarint32(auth.getAccounts().size());
@@ -71,6 +71,13 @@ public class Packer {
             raw.packName(a.getPermission().getActor());
             raw.packName(a.getPermission().getPermission());
             raw.packUint16(a.getWeight());
+        });
+
+        // ownwer.waits
+        raw.packVarint32(auth.getWaits().size());
+        auth.getWaits().forEach(w -> {
+            raw.packUint32(w.getWeightSec());
+            raw.packUint16(w.getWeight());
         });
 
         return raw.toHex();
@@ -145,13 +152,92 @@ public class Packer {
             raw.packVarint32(dat.length);
             raw.pack(dat);
         });
-        //transaction_extensions
-        //raw.packVarint32(t.getTransactionExtensions().size());
-        //TODO: getTransactionExtensions
-
-        //context_free_data
-        //raw.packVarint32(t.getContextFreeActions().size());
         return raw;
     }
+
+
+    public static String packProposeArg(ProposeArg arg) {
+        Raw raw = new Raw();
+        //The account proposing a transaction
+        raw.packName(arg.getProposer());
+        //The name of the proposal (should be unique for proposer)
+        raw.packName(arg.getProposalName());
+        //Permission levels expected to approve the proposal
+        List<Authorization> requests = arg.getRequests();
+        raw.packVarint32(requests.size());
+        requests.forEach(a -> {
+            raw.packName(a.getActor());
+            raw.packName(a.getPermission());
+        });
+
+        //----------------------------------------------
+        // Proposed transaction
+        PackedTransaction trx = arg.getTrx();
+        //expiration
+        raw.packUint32(trx.getExpiration().toEpochSecond(ZoneOffset.ofHours(0)));
+        //ref_block_num
+        raw.packUint16(trx.getRefBlockNum().intValue());
+        //ref_block_prefix
+        raw.packUint32(trx.getRefBlockPrefix());
+        //max_net_usage_words
+        raw.packVarint32(trx.getMaxNetUsageWords());
+        //max_cpu_usage_ms
+        raw.packUint8(trx.getMaxCpuUsageMs());//TODO: what the type?
+        //delay_sec
+        raw.packVarint32(trx.getDelaySec());
+        //context_free_actions
+        raw.packVarint32(trx.getContextFreeActions().size());
+        //TODO: getContextFreeActions
+
+        //actions
+        raw.packVarint32(trx.getActions().size());
+        trx.getActions().forEach(a -> {
+            //action.account
+            raw.packName(a.getAccount())
+                    .packName(a.getName())
+                    .packVarint32(a.getAuthorization().size());
+
+            //action.authorization
+            a.getAuthorization().forEach(au -> {
+                raw.packName(au.getActor())
+                        .packName(au.getPermission());
+            });
+            //action.data
+            byte[] dat = Hex.toBytes(a.getData());
+            raw.packVarint32(dat.length);
+            raw.pack(dat);
+        });
+        //transaction_extensions
+        raw.packVarint32(trx.getTransactionExtensions().size());
+
+        return raw.toHex();
+    }
+
+    public static String packApproveArg(ApproveArg arg) {
+        Raw raw = new Raw();
+        //The account proposing a transaction
+        raw.packName(arg.getProposer());
+        //The name of the proposal (should be unique for proposer)
+        raw.packName(arg.getProposalName());
+        //Permission levels expected to approve the proposal
+        PermissionLevel permissionLevel = arg.getPermissionLevel();
+        raw.packName(permissionLevel.getActor());
+        raw.packName(permissionLevel.getPermission());
+
+        return raw.toHex();
+    }
+
+    public static String packExexPropose(ExecPropose arg) {
+        Raw raw = new Raw();
+        //The account proposing a transaction
+        raw.packName(arg.getProposer());
+        //The name of the proposal (should be unique for proposer)
+        raw.packName(arg.getProposalName());
+        //- Transaction's checksum
+        raw.packName(arg.getExecuter());
+
+        return raw.toHex();
+    }
+
 
 }
