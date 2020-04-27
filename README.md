@@ -16,7 +16,7 @@
 	    <version>v0.9.17</version>
 	</dependency>
 
-<repositories>
+	<repositories>
 		<repository>
 		    <id>jitpack.io</id>
 		    <url>https://jitpack.io</url>
