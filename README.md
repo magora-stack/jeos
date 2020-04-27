@@ -2,23 +2,26 @@
 
 > eosio java sdk with eos rpc-api
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.jafka/jeos.svg)](https://maven-badges.herokuapp.com/maven-central/io.jafka/jeos)
-[![Javadocs](https://javadoc.io/badge/io.jafka/jeos.svg)](https://javadoc.io/doc/io.jafka/jeos)
+
 
 ## dependency
 
 ### release version
-
-Maven [http://repo1.maven.org/maven2/io/jafka/jeos](http://repo1.maven.org/maven2/io/jafka/jeos)
+[![](https://jitpack.io/v/CarilKing/jeos.svg)](https://jitpack.io/#CarilKing/jeos)
 
 ```xml
-<dependencies>
-  <dependency>
-    <groupId>io.jafka</groupId>
-    <artifactId>jeos</artifactId>
-    <version>0.9.15</version>
-  </dependency>
-</dependencies>
+	<dependency>
+	    <groupId>com.github.CarilKing</groupId>
+	    <artifactId>jeos</artifactId>
+	    <version>v0.9.17</version>
+	</dependency>
+
+<repositories>
+		<repository>
+		    <id>jitpack.io</id>
+		    <url>https://jitpack.io</url>
+		</repository>
+	</repositories>
 ```
 
 Gradle
