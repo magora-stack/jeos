@@ -1,15 +1,12 @@
 package io.jafka.jeos;
 
-import com.sun.javafx.binding.StringFormatter;
 import io.jafka.jeos.core.common.Authorization;
 import io.jafka.jeos.core.common.SignArg;
 import io.jafka.jeos.core.common.transaction.PackedTransaction;
-import io.jafka.jeos.core.request.chain.json2bin.TransferArg;
 import io.jafka.jeos.core.request.chain.transaction.PushTransactionRequest;
-import io.jafka.jeos.core.request.history.TransactionRequest;
-import io.jafka.jeos.core.response.chain.account.Key;
 import io.jafka.jeos.core.response.chain.transaction.PushedTransaction;
 import io.jafka.jeos.util.KeyUtil;
+import io.jafka.jeos.util.Signer;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -32,8 +29,9 @@ public class Test {
             SignArg arg = api.getSignArg(1200);
             LocalApi localApi = EosApiFactory.createLocalApi();
             String amount = new DecimalFormat("##0.0000 EOS").format(value);
-            PushTransactionRequest req = localApi.transfer(arg, privateKey, "eosio.token", from, to, amount, memo);
-            PushedTransaction tx = api.pushTransaction(req);
+            PackedTransaction transaction = localApi.transfer(arg, "eosio.token", from, to, amount, memo);
+            PushTransactionRequest request = Signer.sign(arg.getChainId(), transaction, privateKey);
+            PushedTransaction tx = api.pushTransaction(request);
             if (tx != null && tx.getTransactionId() != null) {
                 System.out.println(tx.getTransactionId());
             }
@@ -47,8 +45,9 @@ public class Test {
         try {
             SignArg arg = api.getSignArg(1200);
             LocalApi localApi = EosApiFactory.createLocalApi();
-            PushTransactionRequest req = localApi.createAccount(arg, privateKey, creator, name, owner, active, 5000, "1.0000 EOS", "1.0000 EOS");
-            PushedTransaction tx = api.pushTransaction(req);
+            PackedTransaction transaction = localApi.createAccount(arg, creator, name, owner, active, 5000, "1.0000 EOS", "1.0000 EOS");
+            PushTransactionRequest request = Signer.sign(arg.getChainId(), transaction, privateKey);
+            PushedTransaction tx = api.pushTransaction(request);
             if (tx != null && tx.getTransactionId() != null) {
                 System.out.println(tx.getTransactionId());
             }
@@ -62,8 +61,9 @@ public class Test {
         try {
             SignArg arg = api.getSignArg(1200);
             LocalApi localApi = EosApiFactory.createLocalApi();
-            PushTransactionRequest req = localApi.buyRam(arg, privateKey, payer, receiver, ramBytes);
-            PushedTransaction tx = api.pushTransaction(req);
+            PackedTransaction transaction = localApi.buyRam(arg, payer, receiver, ramBytes);
+            PushTransactionRequest request = Signer.sign(arg.getChainId(), transaction, privateKey);
+            PushedTransaction tx = api.pushTransaction(request);
             if (tx != null && tx.getTransactionId() != null) {
                 System.out.println(tx.getTransactionId());
             }
@@ -77,8 +77,9 @@ public class Test {
         try {
             SignArg arg = api.getSignArg(1200);
             LocalApi localApi = EosApiFactory.createLocalApi();
-            PushTransactionRequest req = localApi.delegate(arg, privateKey, from, receiver, stakeNetQuantity, stakeCpuQuantity);
-            PushedTransaction tx = api.pushTransaction(req);
+            PackedTransaction transaction = localApi.delegate(arg, from, receiver, stakeNetQuantity, stakeCpuQuantity);
+            PushTransactionRequest request = Signer.sign(arg.getChainId(), transaction, privateKey);
+            PushedTransaction tx = api.pushTransaction(request);
             if (tx != null && tx.getTransactionId() != null) {
                 System.out.println(tx.getTransactionId());
             }
@@ -92,8 +93,9 @@ public class Test {
         try {
             SignArg arg = api.getSignArg(1200);
             LocalApi localApi = EosApiFactory.createLocalApi();
-            PushTransactionRequest req = localApi.updateAuth(arg, privateKey, account, publicKey, permission);
-            PushedTransaction tx = api.pushTransaction(req);
+            PackedTransaction transaction = localApi.updateAuth(arg, account, publicKey, permission);
+            PushTransactionRequest request = Signer.sign(arg.getChainId(), transaction, privateKey);
+            PushedTransaction tx = api.pushTransaction(request);
             if (tx != null && tx.getTransactionId() != null) {
                 System.out.println(tx.getTransactionId());
             }
@@ -107,8 +109,9 @@ public class Test {
         try {
             SignArg arg = api.getSignArg(1200);
             LocalApi localApi = EosApiFactory.createLocalApi();
-            PushTransactionRequest req = localApi.updateMultipleAuth(arg, privateKey, account, threshold, accounts, permission);
-            PushedTransaction tx = api.pushTransaction(req);
+            PackedTransaction transaction = localApi.updateMultipleAuth(arg, account, threshold, accounts, permission);
+            PushTransactionRequest request = Signer.sign(arg.getChainId(), transaction, privateKey);
+            PushedTransaction tx = api.pushTransaction(request);
             if (tx != null && tx.getTransactionId() != null) {
                 System.out.println(tx.getTransactionId());
             }
@@ -131,9 +134,10 @@ public class Test {
             }
             String amount = new DecimalFormat("##0.0000 EOS").format(value);
             //交易有效期24小时
-            PackedTransaction trx = localApi.createTransfer(api.getSignArg(24 * 3600), "eosio.token", from, to, amount, memo);
-            PushTransactionRequest req = localApi.propose(arg, privateKey, proposer, proposalName, requests, trx, "active");
-            PushedTransaction tx = api.pushTransaction(req);
+            PackedTransaction trx = localApi.transfer(api.getSignArg(24 * 3600), "eosio.token", from, to, amount, memo);
+            PackedTransaction transaction = localApi.propose(arg, proposer, proposalName, requests, trx, "active");
+            PushTransactionRequest request = Signer.sign(arg.getChainId(), transaction, privateKey);
+            PushedTransaction tx = api.pushTransaction(request);
             if (tx != null && tx.getTransactionId() != null) {
                 System.out.println(tx.getTransactionId());
             }
@@ -147,8 +151,9 @@ public class Test {
         try {
             SignArg arg = api.getSignArg(1200);
             LocalApi localApi = EosApiFactory.createLocalApi();
-            PushTransactionRequest req = localApi.approve(arg, privateKey, approver, proposer, proposalName, "active");
-            PushedTransaction tx = api.pushTransaction(req);
+            PackedTransaction transaction = localApi.approve(arg, approver, proposer, proposalName, "active");
+            PushTransactionRequest request = Signer.sign(arg.getChainId(), transaction, privateKey);
+            PushedTransaction tx = api.pushTransaction(request);
             if (tx != null && tx.getTransactionId() != null) {
                 System.out.println(tx.getTransactionId());
             }
@@ -162,8 +167,9 @@ public class Test {
         try {
             SignArg arg = api.getSignArg(1200);
             LocalApi localApi = EosApiFactory.createLocalApi();
-            PushTransactionRequest req = localApi.execPropose(arg, privateKey, executer, proposer, proposalName, "active");
-            PushedTransaction tx = api.pushTransaction(req);
+            PackedTransaction transaction = localApi.execPropose(arg, executer, proposer, proposalName, "active");
+            PushTransactionRequest request = Signer.sign(arg.getChainId(), transaction, privateKey);
+            PushedTransaction tx = api.pushTransaction(request);
             if (tx != null && tx.getTransactionId() != null) {
                 System.out.println(tx.getTransactionId());
             }

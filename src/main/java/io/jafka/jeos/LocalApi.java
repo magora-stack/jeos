@@ -4,10 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jafka.jeos.core.common.Authorization;
 import io.jafka.jeos.core.common.SignArg;
 import io.jafka.jeos.core.common.transaction.PackedTransaction;
-import io.jafka.jeos.core.request.chain.json2bin.TransferArg;
-import io.jafka.jeos.core.request.chain.transaction.PushTransactionRequest;
-import io.jafka.jeos.core.response.chain.account.Key;
-import io.jafka.jeos.core.response.chain.account.PermissionLevel;
 import io.jafka.jeos.impl.EosApiServiceGenerator;
 
 import java.util.List;
@@ -24,27 +20,25 @@ public interface LocalApi {
 
     String toPublicKey(String privateKey);
 
-    PushTransactionRequest transfer(SignArg arg, String privateKey, String account, String from, String to, String quantity, String memo);
+    PackedTransaction transfer(SignArg arg, String account, String from, String to, String quantity, String memo);
 
-    PackedTransaction createTransfer(SignArg arg, String contract, String from, String to, String quantity, String memo);
+    PackedTransaction buyRam(SignArg arg, String payer, String receiver, int ramBytes);
 
-    PushTransactionRequest buyRam(SignArg arg, String privateKey, String payer, String receiver, int ramBytes);
+    PackedTransaction delegate(SignArg arg, String from, String receiver, String stakeNetQuantity, String stakeCpuQuantity);
 
-    PushTransactionRequest delegate(SignArg arg, String privateKey, String from, String receiver, String stakeNetQuantity, String stakeCpuQuantity);
-
-    PushTransactionRequest createAccount(SignArg arg, String privateKey, String creator, String name, String owner, String active, int ramBytes, String stakeNetQuantity, String stakeCpuQuantity);
+    PackedTransaction createAccount(SignArg arg,  String creator, String name, String owner, String active, int ramBytes, String stakeNetQuantity, String stakeCpuQuantity);
 
     default ObjectMapper getObjectMapper() {
         return EosApiServiceGenerator.getMapper();
     }
 
-    PushTransactionRequest updateAuth(SignArg arg, String privateKey, String account, String publicKey, String permission);
+    PackedTransaction updateAuth(SignArg arg, String account, String publicKey, String permission);
 
-    PushTransactionRequest updateMultipleAuth(SignArg arg, String privateKey, String account, Long threshold, List<String> keys, String permission);
+    PackedTransaction updateMultipleAuth(SignArg arg, String account, Long threshold, List<String> keys, String permission);
 
-    PushTransactionRequest propose(SignArg arg, String privateKey, String account, String proposalName, List<Authorization> requests, PackedTransaction trx, String permission);
+    PackedTransaction propose(SignArg arg,  String account, String proposalName, List<Authorization> requests, PackedTransaction trx, String permission);
 
-    PushTransactionRequest approve(SignArg arg, String privateKey, String account,String proposer, String proposalName, String permission);
+    PackedTransaction approve(SignArg arg,  String account, String proposer, String proposalName, String permission);
 
-    PushTransactionRequest execPropose(SignArg arg, String privateKey, String account, String proposer, String proposalName, String permission);
+    PackedTransaction execPropose(SignArg arg, String account, String proposer, String proposalName, String permission);
 }
