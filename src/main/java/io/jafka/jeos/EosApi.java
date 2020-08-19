@@ -31,7 +31,7 @@ public interface EosApi{
 
     String CHAIN_ID_MAINET = "aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906";
     String CHAIN_ID_JUNGLE = "038f4b0fc8ff18a4f0842a8f0564611f6e96e8535901dd45e43ac8691a1c4dca";
-    
+
     ChainInfo getChainInfo();
 
     Block getBlock(String blockNumberOrId);
@@ -44,6 +44,8 @@ public interface EosApi{
 
     TableRow getTableRows(String scope, String code, String table);
 
+    TableRow getTableByScope(String code, String table, int limit);
+
     List<String> getCurrencyBalance(String code, String accountName, String symbol);
 
     AbiBinToJson abiBinToJson(String code, String action, String binargs);
@@ -52,7 +54,7 @@ public interface EosApi{
 
     PushedTransaction pushTransaction(String compression, SignedPackedTransaction packedTransaction);
     PushedTransaction pushTransaction(PushTransactionRequest pushTransactionRequest);
-    
+
     List<PushedTransaction> pushTransactions(List<PushTransactionRequest> pushTransactionRequests);
 
     RequiredKeys getRequiredKeys(PackedTransaction transaction, List<String> keys);
@@ -86,7 +88,7 @@ public interface EosApi{
     String createKey(String walletName, WalletKeyType walletKeyType);
 
     Actions getActions(String accountName, Integer pos, Integer offset);
-    
+
     //TODO: changed day by day
     Object getTransaction(TransactionRequest transactionRequest);
 
@@ -95,6 +97,6 @@ public interface EosApi{
     ControlledAccounts getControlledAccounts(String controllingAccountName);
 
     ObjectMapper getObjectMapper();
-    
+
     SignArg getSignArg(int expiredSecond);
 }

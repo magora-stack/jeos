@@ -85,7 +85,7 @@ public class EosApiRestClientImpl implements EosApi {
 
     @Override
     public TableRow getTableRows(String scope, String code, String table){
-        LinkedHashMap<String, String> requestParameters = new LinkedHashMap<>(7);
+        LinkedHashMap<String, String> requestParameters = new LinkedHashMap<>(4);
 
         requestParameters.put("scope", scope);
         requestParameters.put("code", code);
@@ -93,6 +93,17 @@ public class EosApiRestClientImpl implements EosApi {
         requestParameters.put("json", "true");
 
         return EosApiServiceGenerator.executeSync(eosChainApiService.getTableRows(requestParameters));
+    }
+
+    @Override
+    public TableRow getTableByScope(String code, String table, int limit) {
+        LinkedHashMap<String, String> requestParameters = new LinkedHashMap<>(3);
+
+        requestParameters.put("code", code);
+        requestParameters.put("table", table);
+        requestParameters.put("limit", limit + "");
+
+        return EosApiServiceGenerator.executeSync(eosChainApiService.getTableByScope(requestParameters));
     }
 
     @Override
@@ -263,12 +274,12 @@ public class EosApiRestClientImpl implements EosApi {
     public ObjectMapper getObjectMapper() {
         return EosApiServiceGenerator.getMapper();
     }
-    
+
     @Override
     public SignArg getSignArg(int expiredSecond) {
         ChainInfo info = getChainInfo();
         Block block = getBlock(info.getLastIrreversibleBlockNum().toString());
-        
+
         SignArg arg = new SignArg();
         arg.setChainId(info.getChainId());
         arg.setExpiredSecond(expiredSecond);
@@ -278,11 +289,11 @@ public class EosApiRestClientImpl implements EosApi {
         arg.setRefBlockPrefix(block.getRefBlockPrefix());
         return arg;
     }
-    
+
     // ------------------------------------------------------------------------------
     //                                                                              //
     //                                  LOCAL API                                   //
     //                                                                              //
     // ------------------------------------------------------------------------------
-    
+
 }
