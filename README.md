@@ -13,7 +13,7 @@
 	<dependency>
 	    <groupId>com.github.CarilKing</groupId>
 	    <artifactId>jeos</artifactId>
-	    <version>v0.9.18</version>
+	    <version>v0.9.19</version>
 	</dependency>
 
 	<repositories>
